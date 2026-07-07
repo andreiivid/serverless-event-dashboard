@@ -4,6 +4,7 @@ import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 import { Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
+import { LambdaIntegration, RestApi } from 'aws-cdk-lib/aws-apigateway';
 
 export class InfraStack extends cdk.Stack {
   public readonly eventsTable: Table;
@@ -32,5 +33,12 @@ export class InfraStack extends cdk.Stack {
     });
 
     this.eventsTable.grantWriteData(ingestEventFunction);
+    const api = new RestApi(this, 'EventsApi', {
+    restApiName: 'serverless-event-dashboard-api',
+    description: 'API for ingesting and querying application events.',
+  });
+
+  const events = api.root.addResource('events');
+  events.addMethod('POST', new LambdaIntegration(ingestEventFunction));
   }
 }
